@@ -2,48 +2,36 @@ package main
 
 import (
 	"fmt"
-	"image/color"
 
 	rl "github.com/gen2brain/raylib-go/raylib"
-	"github.com/vargaadam23/invaders/player"
+	pl "github.com/vargaadam23/invaders/player"
 )
 
-type BulletArray []*player.Bullet
+const windowHeight = 800
+const windowWidth = 1000
+
+type BulletArray []*pl.Bullet
 
 func main() {
-	rl.InitWindow(800, 450, "raylib [core] example - basic window")
+	rl.InitWindow(windowWidth, windowHeight, "raylib [core] example - basic window")
 	defer rl.CloseWindow()
 
-	x := 10
-	y := -10
+	player := pl.InitPlayer(windowWidth, windowHeight)
 
 	var bulletArray BulletArray = BulletArray{}
 
-	rl.SetTargetFPS(30)
+	rl.SetTargetFPS(60)
 
 	for !rl.WindowShouldClose() {
-		if rl.IsKeyDown(rl.KeyLeft) {
-			x = x - 10
-		}
-
-		if rl.IsKeyDown(rl.KeyRight) {
-			x = x + 10
-		}
-
-		if rl.IsKeyDown(rl.KeyDown) {
-			y = y + 10
-		}
-
-		if rl.IsKeyDown(rl.KeyUp) {
-			y = y - 10
-		}
+		player.HandleMovement()
 
 		rl.BeginDrawing()
 
 		rl.ClearBackground(rl.RayWhite)
 
 		if rl.IsKeyPressed(rl.KeySpace) {
-			bulletArray = append(bulletArray, player.NewBullet(int32(x), int32(y)))
+			bulletArray = append(bulletArray, pl.NewBullet(int32(player.Hitbox.X), int32(player.Hitbox.Y)))
+			bulletArray = append(bulletArray, pl.NewBullet(int32(player.Hitbox.X+player.Hitbox.Width), int32(player.Hitbox.Y)))
 			fmt.Print(len(bulletArray))
 		}
 
@@ -53,12 +41,19 @@ func main() {
 			}
 		}
 
-		rl.DrawCircle(int32(x), int32(y), 100.00, color.RGBA{
-			100, 25, 25, 25,
-		})
+		AddWalls(10)
+
+		player.DrawPlayer()
 
 		rl.EndDrawing()
 	}
+}
+
+func AddWalls(wallWidth int32) {
+	rl.DrawRectangle(0, 0, windowWidth, wallWidth, rl.Black)
+	rl.DrawRectangle(0, 0, wallWidth, windowHeight, rl.Black)
+	rl.DrawRectangle(0, windowHeight-wallWidth, windowWidth, wallWidth, rl.Black)
+	rl.DrawRectangle(windowWidth-wallWidth, 0, wallWidth, windowHeight, rl.Black)
 }
 
 func RemoveIndex(s BulletArray, index int) BulletArray {

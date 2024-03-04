@@ -7,26 +7,26 @@ import (
 )
 
 const speed = 5
-const size = 10.00
+const size = 5.00
 
 var colorb color.RGBA = rl.Red
 
-type Position struct {
+type Point struct {
 	X int32
 	Y int32
 }
 
 type Bullet struct {
-	Position  Position
+	Position  Point
 	IsSpawned bool
 	Speed     int32
-	Size      float32
+	Size      int32
 	Color     color.RGBA
 }
 
 func NewBullet(X, Y int32) *Bullet {
 	return &Bullet{
-		Position: Position{
+		Position: Point{
 			X: X,
 			Y: Y,
 		},
@@ -43,7 +43,7 @@ func (bullet *Bullet) advanceBullet() {
 
 func (bullet *Bullet) RenderBullet() bool {
 	if bullet.IsSpawned {
-		rl.DrawCircle(bullet.Position.X, bullet.Position.Y, bullet.Size, bullet.Color)
+		rl.DrawRectangle(bullet.Position.X, bullet.Position.Y, bullet.Size, bullet.Size, bullet.Color)
 		bullet.advanceBullet()
 	}
 
