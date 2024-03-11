@@ -2,14 +2,13 @@ package player
 
 import (
 	rl "github.com/gen2brain/raylib-go/raylib"
+	"github.com/vargaadam23/invaders/character"
 )
 
 // Rectangle hitbox
 
 type Player struct {
-	Hitbox rl.Rectangle
-	Color  rl.Color
-	Speed  int32
+	character.Character
 }
 
 // TODO: Add wall values
@@ -31,19 +30,41 @@ func (player *Player) HandleMovement() {
 	}
 }
 
-func (player *Player) DrawPlayer() {
+func (player *Player) DrawCharacter() {
 	rl.DrawRectangle(int32(player.Hitbox.X), int32(player.Hitbox.Y), int32(player.Hitbox.Width), int32(player.Hitbox.Height), player.Color)
 }
 
-func InitPlayer(windowWidth, windowHeight int32) *Player {
+func (player *Player) RenderCharacterBullets() {
+	if rl.IsKeyPressed(rl.KeySpace) {
+		player.Bullets.Append(character.NewBullet(int32(player.Hitbox.X), int32(player.Hitbox.Y), 1))
+		player.Bullets.Append(character.NewBullet(int32(player.Hitbox.X+player.Hitbox.Width), int32(player.Hitbox.Y), 1))
+	}
+
+	current := player.Bullets.Head
+
+	for current.Next != nil {
+
+		if !current.Value.RenderBullet() {
+			current = current.Unlink(player.Bullets)
+		} else {
+			current = current.Next
+		}
+	}
+}
+
+func InitCharacter(windowWidth, windowHeight int32) *Player {
 	return &Player{
-		Hitbox: rl.Rectangle{
-			X:      float32(windowWidth)/2 - 50,
-			Y:      float32(windowHeight) - 200,
-			Width:  200,
-			Height: 100,
+		Character: character.Character{
+			Hitbox: rl.Rectangle{
+				X:      float32(windowWidth)/2 - 50,
+				Y:      float32(windowHeight) - 200,
+				Width:  200,
+				Height: 100,
+			},
+			Color:   rl.Blue,
+			Speed:   10,
+			Bullets: character.InitLinkedList(),
+			IsAlive: true,
 		},
-		Color: rl.Blue,
-		Speed: 10,
 	}
 }

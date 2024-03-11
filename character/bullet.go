@@ -1,4 +1,4 @@
-package player
+package character
 
 import (
 	"image/color"
@@ -22,9 +22,10 @@ type Bullet struct {
 	Speed     int32
 	Size      int32
 	Color     color.RGBA
+	Direction int32
 }
 
-func NewBullet(X, Y int32) *Bullet {
+func NewBullet(X, Y, Direction int32) *Bullet {
 	return &Bullet{
 		Position: Point{
 			X: X,
@@ -34,11 +35,13 @@ func NewBullet(X, Y int32) *Bullet {
 		Speed:     speed,
 		Size:      size,
 		Color:     colorb,
+		// -1 =>  DOWN | 1 => UP
+		Direction: Direction,
 	}
 }
 
 func (bullet *Bullet) advanceBullet() {
-	bullet.Position.Y -= bullet.Speed
+	bullet.Position.Y -= bullet.Direction * bullet.Speed
 }
 
 func (bullet *Bullet) RenderBullet() bool {
@@ -47,7 +50,7 @@ func (bullet *Bullet) RenderBullet() bool {
 		bullet.advanceBullet()
 	}
 
-	if bullet.Position.Y < 0 {
+	if bullet.Position.Y < 0 || bullet.Position.Y > 800 {
 		bullet.IsSpawned = false
 		return false
 	}
