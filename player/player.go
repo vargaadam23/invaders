@@ -30,14 +30,27 @@ func (player *Player) HandleMovement() {
 	}
 }
 
+func (character *Player) GetHitbox() rl.Rectangle {
+	return character.Hitbox
+}
+
+func (character *Player) GetType() string {
+	return "PLAYER"
+}
+
 func (player *Player) DrawCharacter() {
 	rl.DrawRectangle(int32(player.Hitbox.X), int32(player.Hitbox.Y), int32(player.Hitbox.Width), int32(player.Hitbox.Height), player.Color)
+
+	player.RenderCharacterBullets()
+}
+
+func (player *Player) fireBullet() {
+	player.Bullets.Append(character.NewBullet(player.Hitbox.X, player.Hitbox.Y, 1, []character.CollisionEvent{}))
 }
 
 func (player *Player) RenderCharacterBullets() {
 	if rl.IsKeyPressed(rl.KeySpace) {
-		player.Bullets.Append(character.NewBullet(int32(player.Hitbox.X), int32(player.Hitbox.Y), 1))
-		player.Bullets.Append(character.NewBullet(int32(player.Hitbox.X+player.Hitbox.Width), int32(player.Hitbox.Y), 1))
+		player.fireBullet()
 	}
 
 	current := player.Bullets.Head

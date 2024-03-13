@@ -7,7 +7,7 @@ import (
 )
 
 const speed = 5
-const size = 5.00
+const size = 10.00
 
 var colorb color.RGBA = rl.Red
 
@@ -17,36 +17,58 @@ type Point struct {
 }
 
 type Bullet struct {
-	Position  Point
-	IsSpawned bool
-	Speed     int32
-	Size      int32
-	Color     color.RGBA
-	Direction int32
+	Position        rl.Rectangle
+	IsSpawned       bool
+	Speed           int32
+	Size            int32
+	Color           color.RGBA
+	Direction       int32
+	CollisionEvents []CollisionEvent
 }
 
-func NewBullet(X, Y, Direction int32) *Bullet {
+type Collidable interface {
+	GetHitbox() rl.Rectangle
+	GetType() string
+}
+
+type CollisionEvent struct {
+	Collidable Collidable
+	Callback   func()
+}
+
+func NewBullet(X, Y float32, Direction int32, events []CollisionEvent) *Bullet {
 	return &Bullet{
-		Position: Point{
-			X: X,
-			Y: Y,
+		Position: rl.Rectangle{
+			X:      X,
+			Y:      Y,
+			Width:  size,
+			Height: size,
 		},
 		IsSpawned: true,
 		Speed:     speed,
 		Size:      size,
 		Color:     colorb,
 		// -1 =>  DOWN | 1 => UP
-		Direction: Direction,
+		Direction:       Direction,
+		CollisionEvents: events,
 	}
 }
 
 func (bullet *Bullet) advanceBullet() {
-	bullet.Position.Y -= bullet.Direction * bullet.Speed
+	bullet.Position.Y -= float32(bullet.Direction * bullet.Speed)
 }
 
 func (bullet *Bullet) RenderBullet() bool {
 	if bullet.IsSpawned {
-		rl.DrawRectangle(bullet.Position.X, bullet.Position.Y, bullet.Size, bullet.Size, bullet.Color)
+		for _, event := range bullet.CollisionEvents {
+			if rl.CheckCollisionRecs(event.Collidable.GetHitbox(), bullet.Position) {
+				event.Callback()
+				bullet.IsSpawned = false
+				return false
+			}
+		}
+
+		rl.DrawRectangleRec(bullet.Position, bullet.Color)
 		bullet.advanceBullet()
 	}
 

@@ -7,11 +7,20 @@ import (
 // Rectangle hitbox
 
 type Character struct {
-	Hitbox  rl.Rectangle
-	Color   rl.Color
-	Speed   int32
-	Bullets *LinkedList
-	IsAlive bool
+	Hitbox      rl.Rectangle
+	Color       rl.Color
+	Speed       int32
+	Bullets     *LinkedList
+	IsAlive     bool
+	Collidables []Collidable
+}
+
+func (character *Character) GetHitbox() rl.Rectangle {
+	return character.Hitbox
+}
+
+func (character *Character) GetType() string {
+	return "CHARACTER"
 }
 
 type RenderableCharacter interface {
