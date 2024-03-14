@@ -1,9 +1,11 @@
 package character
 
 import (
+	"fmt"
 	"image/color"
 
 	rl "github.com/gen2brain/raylib-go/raylib"
+	"github.com/vargaadam23/invaders/gameobject"
 )
 
 const speed = 5
@@ -17,26 +19,36 @@ type Point struct {
 }
 
 type Bullet struct {
-	Position        rl.Rectangle
-	IsSpawned       bool
-	Speed           int32
-	Size            int32
-	Color           color.RGBA
-	Direction       int32
-	CollisionEvents []CollisionEvent
+	Position  rl.Rectangle
+	IsSpawned bool
+	Speed     int32
+	Size      int32
+	Color     color.RGBA
+	Direction int32
+	Type      gameobject.ObjectType
 }
 
-type Collidable interface {
-	GetHitbox() rl.Rectangle
-	GetType() string
+func (bullet Bullet) GetPosition() rl.Rectangle {
+	return bullet.Position
 }
 
-type CollisionEvent struct {
-	Collidable Collidable
-	Callback   func()
+func (bullet Bullet) GetObjectType() gameobject.ObjectType {
+	return gameobject.PLAYER
 }
 
-func NewBullet(X, Y float32, Direction int32, events []CollisionEvent) *Bullet {
+func (bullet *Bullet) DrawObject() {
+	bullet.RenderBullet()
+}
+
+func InitBullet(X, Y float32, Direction int32, Issuer gameobject.ObjectType) *Bullet {
+	var obtype gameobject.ObjectType
+
+	if Issuer == gameobject.ENEMY {
+		obtype = gameobject.ENEMY_BULLET
+	} else {
+		obtype = gameobject.PLAYER_BULLET
+	}
+
 	return &Bullet{
 		Position: rl.Rectangle{
 			X:      X,
@@ -49,8 +61,8 @@ func NewBullet(X, Y float32, Direction int32, events []CollisionEvent) *Bullet {
 		Size:      size,
 		Color:     colorb,
 		// -1 =>  DOWN | 1 => UP
-		Direction:       Direction,
-		CollisionEvents: events,
+		Direction: Direction,
+		Type:      obtype,
 	}
 }
 
@@ -60,14 +72,6 @@ func (bullet *Bullet) advanceBullet() {
 
 func (bullet *Bullet) RenderBullet() bool {
 	if bullet.IsSpawned {
-		for _, event := range bullet.CollisionEvents {
-			if rl.CheckCollisionRecs(event.Collidable.GetHitbox(), bullet.Position) {
-				event.Callback()
-				bullet.IsSpawned = false
-				return false
-			}
-		}
-
 		rl.DrawRectangleRec(bullet.Position, bullet.Color)
 		bullet.advanceBullet()
 	}
@@ -78,4 +82,22 @@ func (bullet *Bullet) RenderBullet() bool {
 	}
 
 	return true
+}
+
+func (bullet *Bullet) GetHandlerByType(obType gameobject.ObjectType) gameobject.CollisionHandlerFunction {
+	switch obType {
+	case gameobject.ENEMY:
+		if bullet.GetObjectType() == gameobject.ENEMY_BULLET {
+			return func() {
+				fmt.Println("Player hit enemy with bullet!")
+			}
+		} else {
+			return func() {
+				fmt.Println("Enemy hit player with bullet!")
+			}
+		}
+
+	}
+
+	return func() {}
 }

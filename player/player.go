@@ -1,14 +1,36 @@
 package player
 
 import (
+	"fmt"
+
 	rl "github.com/gen2brain/raylib-go/raylib"
 	"github.com/vargaadam23/invaders/character"
+	"github.com/vargaadam23/invaders/gamecontext"
+
+	"github.com/vargaadam23/invaders/gameobject"
 )
 
 // Rectangle hitbox
 
 type Player struct {
-	character.Character
+	Hitbox  rl.Rectangle
+	Speed   int
+	IsAlive bool
+}
+
+func (player Player) GetPosition() rl.Rectangle {
+	return player.Hitbox
+}
+
+func (player Player) GetObjectType() gameobject.ObjectType {
+	return gameobject.PLAYER
+}
+
+func (player *Player) DrawObject() {
+	player.HandleMovement()
+
+	player.RenderCharacterBullets()
+	rl.DrawRectangleRec(player.Hitbox, rl.SkyBlue)
 }
 
 // TODO: Add wall values
@@ -30,54 +52,42 @@ func (player *Player) HandleMovement() {
 	}
 }
 
-func (character *Player) GetHitbox() rl.Rectangle {
-	return character.Hitbox
-}
-
-func (character *Player) GetType() string {
-	return "PLAYER"
-}
-
-func (player *Player) DrawCharacter() {
-	rl.DrawRectangle(int32(player.Hitbox.X), int32(player.Hitbox.Y), int32(player.Hitbox.Width), int32(player.Hitbox.Height), player.Color)
-
-	player.RenderCharacterBullets()
-}
+// func (player *Player) DrawCharacter() {
+// 	player.RenderCharacterBullets()
+// }
 
 func (player *Player) fireBullet() {
-	player.Bullets.Append(character.NewBullet(player.Hitbox.X, player.Hitbox.Y, 1, []character.CollisionEvent{}))
+	bullette := character.InitBullet(player.Hitbox.X, player.Hitbox.Y, 1, gameobject.PLAYER)
+	gamecontext.GetInstance().GameObjects.Append(bullette)
+	fmt.Print(bullette.Type)
 }
 
 func (player *Player) RenderCharacterBullets() {
 	if rl.IsKeyPressed(rl.KeySpace) {
 		player.fireBullet()
 	}
-
-	current := player.Bullets.Head
-
-	for current.Next != nil {
-
-		if !current.Value.RenderBullet() {
-			current = current.Unlink(player.Bullets)
-		} else {
-			current = current.Next
-		}
-	}
 }
 
 func InitCharacter(windowWidth, windowHeight int32) *Player {
 	return &Player{
-		Character: character.Character{
-			Hitbox: rl.Rectangle{
-				X:      float32(windowWidth)/2 - 50,
-				Y:      float32(windowHeight) - 200,
-				Width:  200,
-				Height: 100,
-			},
-			Color:   rl.Blue,
-			Speed:   10,
-			Bullets: character.InitLinkedList(),
-			IsAlive: true,
+		Hitbox: rl.Rectangle{
+			X:      float32(windowWidth)/2 - 50,
+			Y:      float32(windowHeight) - 200,
+			Width:  200,
+			Height: 100,
 		},
+		Speed:   10,
+		IsAlive: true,
 	}
+}
+
+func (player *Player) GetHandlerByType(obType gameobject.ObjectType) gameobject.CollisionHandlerFunction {
+	switch obType {
+	case gameobject.PLAYER_BULLET:
+		return func() {
+			fmt.Println("Player bullet hit wall!")
+		}
+	}
+
+	return func() {}
 }

@@ -1,7 +1,7 @@
-package character
+package gameobject
 
 type Node struct {
-	Value *Bullet
+	Value GameObject
 	Next  *Node
 	Prev  *Node
 }
@@ -20,7 +20,7 @@ func InitLinkedList() *LinkedList {
 	}
 }
 
-func (list *LinkedList) Append(value *Bullet) {
+func (list *LinkedList) Append(value GameObject) {
 	if list.Head.Value == nil {
 		list.Head.Value = value
 
