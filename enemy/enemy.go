@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	rl "github.com/gen2brain/raylib-go/raylib"
+	"github.com/google/uuid"
 
 	"github.com/vargaadam23/invaders/character"
 	"github.com/vargaadam23/invaders/gamecontext"
@@ -12,19 +13,21 @@ import (
 )
 
 type Enemy struct {
-	Hitbox      rl.Rectangle
-	IsAlive     bool
-	BulletTimer *util.Timer
-	Color       rl.Color
-	Speed       int
+	uuid             string
+	Hitbox           *rl.Rectangle
+	IsAlive          bool
+	BulletTimer      *util.Timer
+	Color            rl.Color
+	Speed            int
+	markedForDestroy bool
 }
 
 func (enemy Enemy) GetPosition() rl.Rectangle {
-	return enemy.Hitbox
+	return *enemy.Hitbox
 }
 
 func (enemy Enemy) GetObjectType() gameobject.ObjectType {
-	return gameobject.PLAYER
+	return gameobject.ENEMY
 }
 
 func (enemy *Enemy) DrawObject() {
@@ -36,6 +39,7 @@ func (enemy *Enemy) GetHandlerByType(obType gameobject.ObjectType) gameobject.Co
 	switch obType {
 	case gameobject.PLAYER_BULLET:
 		return func() {
+			enemy.SetMarkedForDestroy()
 			fmt.Println("Enemy collision with player bullet!")
 		}
 	case gameobject.PLAYER:
@@ -48,7 +52,7 @@ func (enemy *Enemy) GetHandlerByType(obType gameobject.ObjectType) gameobject.Co
 		}
 	case gameobject.ENEMY_BULLET:
 		return func() {
-			fmt.Println("Enemy collision with enemy bullet!")
+
 		}
 	}
 
@@ -67,15 +71,33 @@ func InitCharacter(windowWidth, windowHeight int32) *Enemy {
 	timer.StartTimer(2)
 
 	return &Enemy{
-		Hitbox: rl.Rectangle{
+		uuid: uuid.NewString(),
+		Hitbox: &rl.Rectangle{
 			X:      float32(windowWidth)/2 - 50,
 			Y:      200,
 			Width:  50,
 			Height: 50,
 		},
-		Color:       rl.Green,
-		Speed:       10,
-		IsAlive:     true,
-		BulletTimer: timer,
+		Color:            rl.Green,
+		Speed:            10,
+		IsAlive:          true,
+		BulletTimer:      timer,
+		markedForDestroy: false,
 	}
+}
+
+func (enemy Enemy) GetObjectTypeString() string {
+	return "ENEMY"
+}
+
+func (enemy Enemy) GetUuid() string {
+	return enemy.uuid
+}
+
+func (enemy Enemy) GetMarkedForDestroy() bool {
+	return enemy.markedForDestroy
+}
+
+func (enemy *Enemy) SetMarkedForDestroy() {
+	enemy.markedForDestroy = true
 }

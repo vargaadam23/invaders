@@ -5,6 +5,8 @@ import (
 	"image/color"
 
 	rl "github.com/gen2brain/raylib-go/raylib"
+	"github.com/google/uuid"
+
 	"github.com/vargaadam23/invaders/gameobject"
 )
 
@@ -19,21 +21,23 @@ type Point struct {
 }
 
 type Bullet struct {
-	Position  rl.Rectangle
-	IsSpawned bool
-	Speed     int32
-	Size      int32
-	Color     color.RGBA
-	Direction int32
-	Type      gameobject.ObjectType
+	uuid             string
+	Position         *rl.Rectangle
+	IsSpawned        bool
+	Speed            int32
+	Size             int32
+	Color            color.RGBA
+	Direction        int32
+	Type             gameobject.ObjectType
+	markedForDestroy bool
 }
 
 func (bullet Bullet) GetPosition() rl.Rectangle {
-	return bullet.Position
+	return *bullet.Position
 }
 
 func (bullet Bullet) GetObjectType() gameobject.ObjectType {
-	return gameobject.PLAYER
+	return bullet.Type
 }
 
 func (bullet *Bullet) DrawObject() {
@@ -50,7 +54,8 @@ func InitBullet(X, Y float32, Direction int32, Issuer gameobject.ObjectType) *Bu
 	}
 
 	return &Bullet{
-		Position: rl.Rectangle{
+		uuid: uuid.NewString(),
+		Position: &rl.Rectangle{
 			X:      X,
 			Y:      Y,
 			Width:  size,
@@ -61,8 +66,9 @@ func InitBullet(X, Y float32, Direction int32, Issuer gameobject.ObjectType) *Bu
 		Size:      size,
 		Color:     colorb,
 		// -1 =>  DOWN | 1 => UP
-		Direction: Direction,
-		Type:      obtype,
+		Direction:        Direction,
+		Type:             obtype,
+		markedForDestroy: false,
 	}
 }
 
@@ -72,7 +78,7 @@ func (bullet *Bullet) advanceBullet() {
 
 func (bullet *Bullet) RenderBullet() bool {
 	if bullet.IsSpawned {
-		rl.DrawRectangleRec(bullet.Position, bullet.Color)
+		rl.DrawRectangleRec(*bullet.Position, bullet.Color)
 		bullet.advanceBullet()
 	}
 
@@ -85,19 +91,61 @@ func (bullet *Bullet) RenderBullet() bool {
 }
 
 func (bullet *Bullet) GetHandlerByType(obType gameobject.ObjectType) gameobject.CollisionHandlerFunction {
-	switch obType {
-	case gameobject.ENEMY:
-		if bullet.GetObjectType() == gameobject.ENEMY_BULLET {
+	if bullet.GetObjectType() == gameobject.ENEMY_BULLET {
+		switch obType {
+		case gameobject.ENEMY:
 			return func() {
-				fmt.Println("Player hit enemy with bullet!")
+
 			}
-		} else {
+		case gameobject.PLAYER:
 			return func() {
-				fmt.Println("Enemy hit player with bullet!")
+				bullet.SetMarkedForDestroy()
+				fmt.Println("Enemy bullet hit player!")
+			}
+		case gameobject.WALL:
+			return func() {
+				bullet.SetMarkedForDestroy()
+				fmt.Println("Bullet hit wall, will be destoryed in the next frame!")
 			}
 		}
+	} else {
+		switch obType {
+		case gameobject.ENEMY:
+			return func() {
+				bullet.SetMarkedForDestroy()
+				fmt.Println("PLayer bullet hit player!")
+			}
+		case gameobject.PLAYER:
+			return func() {
 
+			}
+		case gameobject.WALL:
+			return func() {
+				bullet.SetMarkedForDestroy()
+				fmt.Println("Bullet hit wall, will be destoryed in the next frame!")
+			}
+		}
 	}
 
 	return func() {}
+}
+
+func (bullet Bullet) GetObjectTypeString() string {
+	if bullet.GetObjectType() == gameobject.ENEMY_BULLET {
+		return "ENEMY_BULLET"
+	} else {
+		return "PLAYER_BULLET"
+	}
+}
+
+func (bullet Bullet) GetUuid() string {
+	return bullet.uuid
+}
+
+func (bullet Bullet) GetMarkedForDestroy() bool {
+	return bullet.markedForDestroy
+}
+
+func (bullet *Bullet) SetMarkedForDestroy() {
+	bullet.markedForDestroy = true
 }

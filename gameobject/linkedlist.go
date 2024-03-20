@@ -7,7 +7,8 @@ type Node struct {
 }
 
 type LinkedList struct {
-	Head *Node
+	Head      *Node
+	ObjectMap map[string]GameObject
 }
 
 func InitLinkedList() *LinkedList {
@@ -17,10 +18,13 @@ func InitLinkedList() *LinkedList {
 			Prev:  nil,
 			Value: nil,
 		},
+		ObjectMap: map[string]GameObject{},
 	}
 }
 
 func (list *LinkedList) Append(value GameObject) {
+	list.ObjectMap[value.GetUuid()] = value
+
 	if list.Head.Value == nil {
 		list.Head.Value = value
 
@@ -37,6 +41,8 @@ func (list *LinkedList) Append(value GameObject) {
 }
 
 func (node *Node) Unlink(list *LinkedList) *Node {
+	delete(list.ObjectMap, node.Value.GetUuid())
+
 	if list.Head == node {
 		list.Head = node.Next
 	}

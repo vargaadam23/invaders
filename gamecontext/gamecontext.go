@@ -56,18 +56,23 @@ func (context *GameContext) DrawGameElements() {
 	rl.ClearBackground(rl.RayWhite)
 
 	current := context.GameObjects.Head
-	collidable := context.GameObjects.Head
+	var next *gameobject.Node
 
 	for current != nil {
-		current.Value.DrawObject()
+		next = current.Next
 
-		collidable = current.Next
+		if current.Value.GetMarkedForDestroy() {
+			current.Unlink(context.GameObjects)
+			current = next
+		} else {
+			current.Value.DrawObject()
 
-		for collidable != nil {
-			collision.CheckCollision(current.Value, collidable.Value)
-			collidable = collidable.Next
+			for next != nil {
+				collision.CheckCollision(current.Value, next.Value)
+				next = next.Next
+			}
+
+			current = current.Next
 		}
-
-		current = current.Next
 	}
 }

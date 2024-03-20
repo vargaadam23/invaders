@@ -24,4 +24,8 @@ type GameObject interface {
 	GetObjectType() ObjectType
 	DrawObject()
 	GetHandlerByType(obType ObjectType) CollisionHandlerFunction
+	GetObjectTypeString() string
+	GetUuid() string
+	GetMarkedForDestroy() bool
+	SetMarkedForDestroy()
 }

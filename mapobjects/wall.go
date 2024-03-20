@@ -4,17 +4,19 @@ import (
 	"fmt"
 
 	rl "github.com/gen2brain/raylib-go/raylib"
+	"github.com/google/uuid"
 	"github.com/vargaadam23/invaders/gameobject"
 )
 
 type Wall struct {
-	Pos       rl.Rectangle
+	uuid      string
+	Pos       *rl.Rectangle
 	WallWidth int
 	WallColor rl.Color
 }
 
 func (wall Wall) GetPosition() rl.Rectangle {
-	return wall.Pos
+	return *wall.Pos
 }
 
 func (wall Wall) GetObjectType() gameobject.ObjectType {
@@ -22,7 +24,7 @@ func (wall Wall) GetObjectType() gameobject.ObjectType {
 }
 
 func (wall Wall) DrawObject() {
-	rl.DrawRectangleRec(wall.Pos, wall.WallColor)
+	rl.DrawRectangleRec(*wall.Pos, wall.WallColor)
 }
 
 func InitWall(wallWidth int, position string, window rl.Rectangle) *Wall {
@@ -68,7 +70,8 @@ func InitWall(wallWidth int, position string, window rl.Rectangle) *Wall {
 	}
 
 	return &Wall{
-		Pos:       wall,
+		uuid:      uuid.NewString(),
+		Pos:       &wall,
 		WallWidth: wallWidth,
 		WallColor: rl.Black,
 	}
@@ -80,7 +83,27 @@ func (wall Wall) GetHandlerByType(obType gameobject.ObjectType) gameobject.Colli
 		return func() {
 			fmt.Println("Player bullet hit wall!")
 		}
+	case gameobject.ENEMY_BULLET:
+		return func() {
+			fmt.Println("Enemy bullet hit wall!")
+		}
 	}
 
-	return func() { fmt.Println("Not implemented on enemy") }
+	return func() {}
+}
+
+func (wall Wall) GetObjectTypeString() string {
+	return "WALL"
+}
+
+func (wall Wall) GetUuid() string {
+	return wall.uuid
+}
+
+func (wall Wall) GetMarkedForDestroy() bool {
+	return false
+}
+
+func (wall *Wall) SetMarkedForDestroy() {
+
 }

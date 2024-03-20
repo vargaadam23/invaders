@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	rl "github.com/gen2brain/raylib-go/raylib"
+	"github.com/google/uuid"
 	"github.com/vargaadam23/invaders/character"
 	"github.com/vargaadam23/invaders/gamecontext"
 
@@ -13,13 +14,14 @@ import (
 // Rectangle hitbox
 
 type Player struct {
-	Hitbox  rl.Rectangle
-	Speed   int
-	IsAlive bool
+	uuid             string
+	Hitbox           *rl.Rectangle
+	Speed            int
+	markedForDestroy bool
 }
 
 func (player Player) GetPosition() rl.Rectangle {
-	return player.Hitbox
+	return *player.Hitbox
 }
 
 func (player Player) GetObjectType() gameobject.ObjectType {
@@ -30,7 +32,7 @@ func (player *Player) DrawObject() {
 	player.HandleMovement()
 
 	player.RenderCharacterBullets()
-	rl.DrawRectangleRec(player.Hitbox, rl.SkyBlue)
+	rl.DrawRectangleRec(*player.Hitbox, rl.SkyBlue)
 }
 
 // TODO: Add wall values
@@ -52,10 +54,6 @@ func (player *Player) HandleMovement() {
 	}
 }
 
-// func (player *Player) DrawCharacter() {
-// 	player.RenderCharacterBullets()
-// }
-
 func (player *Player) fireBullet() {
 	bullette := character.InitBullet(player.Hitbox.X, player.Hitbox.Y, 1, gameobject.PLAYER)
 	gamecontext.GetInstance().GameObjects.Append(bullette)
@@ -70,14 +68,15 @@ func (player *Player) RenderCharacterBullets() {
 
 func InitCharacter(windowWidth, windowHeight int32) *Player {
 	return &Player{
-		Hitbox: rl.Rectangle{
+		uuid: uuid.NewString(),
+		Hitbox: &rl.Rectangle{
 			X:      float32(windowWidth)/2 - 50,
 			Y:      float32(windowHeight) - 200,
 			Width:  200,
 			Height: 100,
 		},
-		Speed:   10,
-		IsAlive: true,
+		Speed:            10,
+		markedForDestroy: false,
 	}
 }
 
@@ -85,9 +84,25 @@ func (player *Player) GetHandlerByType(obType gameobject.ObjectType) gameobject.
 	switch obType {
 	case gameobject.PLAYER_BULLET:
 		return func() {
-			fmt.Println("Player bullet hit wall!")
+
 		}
 	}
 
 	return func() {}
+}
+
+func (player Player) GetObjectTypeString() string {
+	return "PLAYER"
+}
+
+func (player Player) GetUuid() string {
+	return player.uuid
+}
+
+func (player Player) GetMarkedForDestroy() bool {
+	return player.markedForDestroy
+}
+
+func (player *Player) SetMarkedForDestroy() {
+	player.markedForDestroy = true
 }
